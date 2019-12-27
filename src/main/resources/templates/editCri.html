@@ -1,0 +1,195 @@
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:c="http://www.w3.org/1999/XSL/Transform">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="/layui/css/layui.css" type="text/css"></link>
+
+</head>
+<body onload="findLoadId();">
+<input type="hidden" id="ccriId"><!-- 修改数据页面 -->
+<br />
+<form class="layui-form">
+    <div class="layui-container">
+        <div class="layui-row">
+            <div class="layui-col-sm4">
+                <div class="layui-form-item">
+                    <label class="layui-form-label"> 制造厂</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" name="motername" id="motername">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-sm4">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">型号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" name="modelno" id="modelno">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-row">
+            <div class="layui-col-sm4">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">日期</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" name="modedate" id="modedate" >
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-col-sm4">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">  容量 </label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" name="cap" id="cap" >
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="layui-row">
+            <div class="layui-col-sm7" style="text-align: right;">
+                <button type="button" class="layui-btn layui-btn-sm" id="btnAdd" name="btnAdd">
+                    <i class="layui-icon layui-icon-ok"></i>确定
+                </button>
+                <button type="button" class="layui-btn layui-btn-primary layui-btn-sm" id="btnclose" name="btnclose">
+                    <i class="layui-icon layui-icon-close"></i>关闭
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+</body>
+<script type="text/javascript" src="/layui/jQuery2.1.1.js"></script>
+<script type="text/javascript" src="/layui/layui.js"></script>
+
+<script type="text/javascript">
+    $("document").ready(function(){
+        //子页面获取父页面的值
+        //fcriId 父页面id
+        //ccriId 子页面id
+        $("#ccriId").val(parent.$("#fcriId").val());
+    });
+    function findLoadId(){
+        var id = $("#ccriId").val();
+        if(id>0){
+            $.ajax({
+                type:"post",
+                url:"/cc/findCriById",
+                data:{
+                    id:id
+                },
+                dataType:"json",
+                success:function(data){
+                    $("id").val(id),
+                        $("#motername").val(data.motername),
+                        $("#modelno").val(data.modelno),
+                        $("#modedate").val(data.modedate),
+                        $("#cap").val(data.cap)
+                    layui.use(['form'], function () {
+                        var form = layui.form;
+                        form.render(); //刷新select选择框渲染
+                    });
+                },
+                error:function(){
+                    layer.msg('ajax执行错误!', {icon: 2,time: 2000});
+                }
+            });
+        }
+    }
+</script>
+
+<script>
+    layui.use(['form','laydate'],function(){
+        var form=layui.form,
+            laydate=layui.laydate,
+            $=layui.jquery;
+
+        laydate.render({
+            elem:"#criRegDate",
+            type:"date", //默认date
+            format:"yyyy-MM-dd", //默认yyyy-MM-dd
+            value:new Date() //设定初始值
+        });
+
+        laydate.render({
+            elem:"#criHospital",
+            type:"date", //默认date
+            format:"yyyy-MM-dd", //默认yyyy-MM-dd
+            value:new Date() //设定初始值
+        });
+
+        $("document").ready(function(){
+            $("#btnAdd").click(function(){
+
+                var id = $("#ccriId").val();
+
+                if(id>0){
+                    //更新操作
+                    $.ajax({
+                        type:"post",
+                        url:"/cc/updCri",
+                        data:{
+                            id:$("#ccriId").val(),
+                            motername:$("#motername").val(),
+                            modelno:$("#modelno").val(),
+                            modedate:$("#modedate").val(),
+                            cap:$("#cap").val()
+                        },
+                        dataType:"json",
+                        success:function(data){
+                            if(data>0){
+                                var index=layer.msg("修改成功！",{icon:6,time:false,shade:0});
+                                setTimeout(function(){
+                                    layer.close(index);
+                                    parent.layer.closeAll(); //关闭弹窗
+                                    window.parent.location.reload();//刷新父页面
+                                },1000);
+
+                            }else{
+                                layer.msg('信息保存失败!', {icon: 5,time: 2000});
+                            }
+                        },
+                        error:function(){
+                            layer.msg('ajax执行错误!', {icon: 2,time: 2000});
+                        }
+                    });
+                }else{
+                    //添加
+                    $.ajax({
+                        type:"post",
+                        url:"/cc/editCri",
+                        data:{
+                            motername:$("#motername").val(),
+                            modelno:$("#modelno").val(),
+                            modedate:$("#modedate").val(),
+                            cap:$("#cap").val()
+                        },
+                        dataType:"json",
+                        success:function(data){
+                            if(data>0){
+                                var index=layer.msg("添加成功！",{icon:6,time:false,shade:0});
+                                setTimeout(function(){
+                                    layer.close(index);
+                                    parent.layer.closeAll(); //关闭弹窗
+                                    window.parent.location.reload();//刷新父页面
+                                },1000);
+                            }else{
+                                layer.msg('信息保存失败!', {icon: 5,time: 2000});
+                            }
+                        },
+                        error:function(){
+                            layer.msg('ajax执行错误!', {icon: 2,time: 2000});
+                        }
+                    });
+                }
+
+
+            });
+        });
+    });
+</script>
+</html>

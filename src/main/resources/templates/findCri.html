@@ -1,0 +1,165 @@
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:c="http://www.w3.org/1999/XSL/Transform">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>高压电机档案表</title>
+    <link rel="stylesheet" href="/layui/css/layui.css"
+          type="text/css"></link>
+</head>
+<body>
+<br/>
+<form class="layui-form">
+    <div class="layui-container">
+        <input type="hidden" id="fcriId">
+        <div class="layui-row">
+            <div class="layui-col-sm6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">制造厂</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" name="motername" id="motername">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-sm6" style="text-align: right;" id="toolbtngroup">
+                <button type="button" class="layui-btn layui-btn-sm"
+                        data-type="findCriName">
+                    <i class="layui-icon layui-icon-search"></i>查询
+                </button>
+                <button type="button" class="layui-btn layui-btn-sm" id="btnreload" onclick="reload()"><i
+                        class="layui-icon layui-icon-refresh-3"></i>刷新
+                </button>
+                <button type="button" class="layui-btn layui-btn-sm"
+                        data-type="addCri">
+                    <i class="layui-icon layui-icon-add-1"></i>添加
+                </button>
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-sm12">
+                <table class="layui-hide" id="test" lay-filter="testCri"></table>
+                <script type="text/html" id="barDemo">
+                    <a class="layui-btn layui-btn-xs" lay-event="edit">
+                        <i class="layui-icon layui-icon-edit"></i>修改
+                    </a>
+                    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">
+                        <i class="layui-icon layui-icon-delete"></i>删除
+                    </a>
+                </script>
+            </div>
+        </div>
+    </div>
+</form>
+</body>
+<script type="text/javascript" src="/layui/jQuery2.1.1.js" th:inline="none"></script>
+<script type="text/javascript" src="/layui/layui.js" th:inline="none"></script>
+<script type="text/javascript" th:inline="none">
+    layui.use(['table', "layer"], function () {
+        var table = layui.table;
+        var layer = layui.layer;
+        table.render({
+            elem: "#test",
+            url: "/cc/findCriName",
+            page: true, //分页
+            method: "post",
+            height: 500, //容器高度
+            limit: 5,//每页显示数据条数,默认10条
+            //toolbar: '#toolbardemo',//仅开启工具栏，不显示左侧模板
+            id: "testCritable",
+            cols: [[
+                {field: 'id', width: 200, title: '设备标识', sort: true},
+                {field: 'motername', width: 200, title: '制造厂'},
+                {field: 'modelno', width: 200, title: '型号'},
+                {field: 'modedate', width: 200, title: '出厂日期 '},
+                {field: 'cap', width: 200, title: '  容量 '},
+                {fixed: 'right', title: "操作", toolbar: "#barDemo", width: 150}
+            ]]
+        });
+
+        //监听行工具事件
+        table.on("tool(testCri)", function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('确定删除行吗？', function (index) {
+                    $.ajax({
+                        type: "post",
+                        url: "/cc/delCri",
+                        data: {
+                            id: data.id
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            if (data > 0) {
+                                layer.msg('删除信息成功!', {icon: 6, time: 2000});
+                            } else {
+                                layer.msg('删除信息失败!', {icon: 5, time: 2000});
+                            }
+                        },
+                        error: function () {
+                            layer.msg('ajax执行错误!', {icon: 2, time: 2000});
+                        }
+                    });
+                    obj.del();
+                    //layer.close(index);
+                });
+            } else if (obj.event === 'edit') {
+                $("#fcriId").val(data.id);
+                layer.open({
+                    type: 2//此处以iframe举例
+                    , title: '修改犯人信息'//标题
+                    , area: ['1000px', '600px']//窗体大小
+                    , shade: 0.5//遮罩层
+                    , maxmin: true//最大化最小化
+                    , anim: 4//动画
+                    , resize: false//是否允许拉伸
+                    , shadeClose: false//是否点击遮罩关闭
+                    , content: '/cc/editCriShow'//内容
+                });
+            }
+        });
+
+        //表格外面按钮工具事件
+        var $ = layui.$, active = {
+            findCriName: function () {
+                var index = layer.msg("查询中,请稍候...", {icon: 16, time: false, shade: 0});
+                //var index2=layer.load(3);
+                setTimeout(function () {
+                    layer.close(index);
+                    table.reload("testCritable", {
+                        page: {
+                            curr: 1
+                        }
+                        , where: {
+                            motername: $("#motername").val()
+                        }
+                    });
+                }, 500);
+            },
+
+            addCri: function () {
+                $("#fcriId").val(0);
+                layer.open({
+                    type: 2//此处以iframe举例
+                    , title: '添加犯人信息'//标题
+                    , area: ['1000px', '600px']//窗体大小
+                    , shade: 0.5//遮罩层
+                    , maxmin: true//最大化最小化
+                    , anim: 4//动画
+                    , resize: false//是否允许拉伸
+                    , shadeClose: false//是否点击遮罩关闭
+                    , content: '/cc/editCriShow'//内容
+                });
+
+            }
+        }
+
+        //如果是表格外面按扭工具事件，则需要用到如下代码
+        $('#toolbtngroup .layui-btn').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+
+    function reload() { //刷新
+        window.location.reload();
+    }
+</script>
+</html>

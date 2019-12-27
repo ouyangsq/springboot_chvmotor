@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kirb.dao.ChvmotorMapper">
+
+    <insert id="addChvmotor">
+		INSERT INTO chvmotor(`motername`,modelno,modedate,cap)
+		VALUES
+		(#{motername},#{modelno},#{modedate},#{cap})
+	</insert>
+
+
+    <select id="findmoterName" resultType="Chvmotor">
+        SELECT id,motername,modelno,modedate,cap FROM chvmotor WHERE 1=1
+        <if test="motername!=null and motername!=''">
+            and motername like CONCAT('%',#{motername},'%')
+        </if>
+        <if test="currPage!=0 and pageSize!=0">
+            limit #{currPage},#{pageSize}
+        </if>
+    </select>
+
+    <select id="findmoterNameCount" resultType="int">
+        SELECT count(1) FROM chvmotor WHERE 1=1
+        <if test="motername!=null and motername!=''">
+            and motername like CONCAT('%',#{motername},'%')
+        </if>
+    </select>
+
+    <delete id="delChvmotorById">
+		delete from chvmotor where id = #{id}
+	</delete>
+
+    <select id="findChvmotorById" resultType="Chvmotor" parameterType="int">
+		select * from chvmotor where id = #{id}
+	</select>
+
+    <update id="updChvmotor" parameterType="Chvmotor">
+        update chvmotor
+        <set>
+            <if test="motername!=null and motername!=''">motername=#{motername},</if>
+            <if test="modelno!=null and modelno!=''">modelno=#{modelno},</if>
+            <if test="modedate!=null and modedate!=''">modedate=#{modedate},</if>
+            <if test="cap!=null and cap!=''">cap=#{cap},</if>
+        </set>
+        where id=#{id}
+    </update>
+    <select id="getInfoByName" parameterType="map" resultType="Chvmotor">
+        SELECT * FROM chvmotor
+        <where>
+            <if test="motername!=null and motername!=''">
+                motername like CONCAT('%',#{motername},'%')
+            </if>
+        </where>
+    </select>
+</mapper>
